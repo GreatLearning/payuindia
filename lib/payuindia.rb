@@ -170,6 +170,10 @@ module PayuIndia
       params['lastname']
     end
 
+    def additional_charges
+      params['additionalCharges']
+    end
+
     # Full address of the customer
     def customer_address
       { :address1 => params['address1'], :address2 => params['address2'],
@@ -195,8 +199,10 @@ module PayuIndia
 
     def checksum_ok?
       checksum_fields = [transaction_status, *user_defined.reverse, customer_email, customer_first_name, product_info, gross, invoice]
+      checksum_fields_array = [@salt, *checksum_fields, @key]
+      checksum_fields_array.unshift(additional_charges) if type == 'EMI'
 
-      unless Digest::SHA512.hexdigest([@salt, *checksum_fields, @key].join("|")) == checksum
+      unless Digest::SHA512.hexdigest(checksum_fields_array.join("|")) == checksum
         @message = 'Return checksum not matching the data provided'
         return false
       end
