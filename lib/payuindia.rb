@@ -200,7 +200,12 @@ module PayuIndia
     def checksum_ok?
       checksum_fields = [transaction_status, *user_defined.reverse, customer_email, customer_first_name, product_info, gross, invoice]
       checksum_fields_array = [@salt, *checksum_fields, @key]
-      checksum_fields_array.unshift(additional_charges) if type == 'EMI'
+      puts "========= payu-india_mode => #{type} and #{checksum_fields_array} ======="
+
+      if type == 'EMI' && additional_charges.present?
+        puts "========= payu-india_EMI => #{additional_charges} ======="
+        checksum_fields_array.unshift(additional_charges)
+      end
 
       unless Digest::SHA512.hexdigest(checksum_fields_array.join("|")) == checksum
         @message = 'Return checksum not matching the data provided'
